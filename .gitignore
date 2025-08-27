@@ -35,3 +35,41 @@ out/
 
 ### VS Code ###
 .vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs / JVM dump
+logs/
+*.log
+spring.log
+hs_err_pid*
+replay_pid*
+heapdump.hprof
+
+# Env / Secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+application-*.local.yml
+*.secret.*
+**/*.keystore
+**/*.jks
+**/*.p12
+
+# Docker
+docker-compose.override.yml
+docker/**/tmp/
+**/.dockerignore.local
+
+# DB local files
+*.h2.db
+*.mv.db
+*.sqlite
+*.db
+
+# Run/Config
+*.pid
+.run/
