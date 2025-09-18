@@ -20,7 +20,15 @@ public enum ErrorCode {
 
 	// 도메인 예시
 	ENTITY_NOT_FOUND("B001", HttpStatus.NOT_FOUND, "대상을 찾을 수 없습니다."),
-	BUSINESS_RULE_VIOLATION("B002", HttpStatus.BAD_REQUEST, "비즈니스 규칙 위반입니다.");
+	BUSINESS_RULE_VIOLATION("B002", HttpStatus.BAD_REQUEST, "비즈니스 규칙 위반입니다."),
+	ENTITY_CONFLICT("B003", HttpStatus.CONFLICT, "엔티티 충돌이 발생했습니다."),
+
+	// 사용자
+	USER_NOT_FOUND("U001", HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+	USER_DUPLICATE_EMAIL("U002", HttpStatus.CONFLICT, "이미 사용 중인 이메일입니다."),
+	USER_DUPLICATE_NICKNAME("U003", HttpStatus.CONFLICT, "이미 사용 중인 닉네임입니다."),
+	USER_VERSION_CONFLICT("U004", HttpStatus.CONFLICT, "동시에 수정되었습니다."),
+	USER_PASSWORD_MISMATCH("U005", HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.");
 
 	private final String code;
 	private final HttpStatus status;

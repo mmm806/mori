@@ -1,42 +1,80 @@
 services:
-  db:
+  db-dev:
+    profiles: ["dev"]
     image: postgres:16
-    container_name: mori-postgres
-    restart: unless-stopped
-    ports:
-      - "${DB_PORT:-5434}:5432"
+    container_name: mori-postgres-dev
+    ports: ["5434:5432"]
     environment:
-      POSTGRES_DB: ${DB_NAME:-mori}
-      POSTGRES_USER: ${DB_USER:-raymond}
-      POSTGRES_PASSWORD: ${DB_PASS:-mori1234}
+      POSTGRES_DB: mori_dev
+      POSTGRES_USER: raymond_dev
+      POSTGRES_PASSWORD: "${DB_PASS_DEV:-devpass}"
       TZ: Asia/Seoul
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-raymond} -d ${DB_NAME:-mori}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 20
-    volumes:
-      - pgdata:/var/lib/postgresql/data
+    volumes: [pgdata_dev:/var/lib/postgresql/data]
+    networks: [mori-dev]
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: mori-app:local
-    container_name: mori-app
+  app-dev:
+    profiles: ["dev"]
+    build: { context: ., dockerfile: Dockerfile }
+    image: mori-app:dev
+    container_name: mori-app-dev
     depends_on:
-      db:
-        condition: service_healthy        # DB healthy 후 기동
-    ports:
-      - "8081:8080"
+      db-dev: { condition: service_healthy }
+    ports: ["8081:8080"]
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_HOST: db-dev
+      DB_PORT: "5432"
+      DB_NAME: "mori_dev"
+      DB_USER: "raymond_dev"
+      DB_PASS: "${DB_PASS_DEV:-devpass}"
+    networks: [mori-dev]
+
+  db-prod:
+    profiles: ["prod"]
+    image: postgres:16
+    container_name: mori-postgres-prod
+    # 실제 운영은 내부망만 사용하고 포트 미노출 권장. 로컬검증용이면 다른 포트 사용
+    ports: ["5435:5432"]
+    environment:
+      POSTGRES_DB: mori
+      POSTGRES_USER: raymond
+      POSTGRES_PASSWORD: "${DB_PASS_PROD:-prodpass}"
+      TZ: Asia/Seoul
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes: [pgdata_prod:/var/lib/postgresql/data]
+    networks: [mori-prod]
+
+  app-prod:
+    profiles: ["prod"]
+    image: mori-app:prod
+    container_name: mori-app-prod
+    depends_on:
+      db-prod: { condition: service_healthy }
+    ports: ["8082:8080"] # 운영은 LB 뒤에 두고 미노출 권장
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      DB_HOST: db            # 컨테이너 간 DNS 이름
+      DB_HOST: db-prod
       DB_PORT: "5432"
-      DB_NAME: "${DB_NAME:-mori}"
-      DB_USER: "${DB_USER:-raymond}"
-      DB_PASS: "${DB_PASS:-mori1234}"
+      DB_NAME: "mori"
+      DB_USER: "raymond"
+      DB_PASS: "${DB_PASS_PROD:-prodpass}"
+    networks: [mori-prod]
 
 volumes:
-  pgdata:
+  pgdata_dev:
+  pgdata_prod:
+
+networks:
+  mori-dev:
+  mori-prod:
